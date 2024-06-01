@@ -1,0 +1,29 @@
+{
+  "name": "app-vaeco-r2",
+  "version": "1.0.0",
+  "description": "app-vaeco",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon --exec babel-node src/server.js"
+  },
+  "author": "Chi Thanh",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/node": "^7.23.9",
+    "@babel/preset-env": "^7.24.0",
+    "bcrypt": "^5.1.1",
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.9",
+    "express": "^4.18.3",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.9.2",
+    "nodemon": "^3.1.0",
+    "sequelize": "^6.37.2",
+    "sequelize-cli": "^6.6.2"
+  }
+}
