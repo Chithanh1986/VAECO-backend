@@ -1,6 +1,7 @@
-import db from '../models/index';
+import db, { sequelize } from '../models/index';
 import bcrypt from 'bcrypt';
 import { createJWT } from '../midleware/JWTAction';
+import { Op } from 'sequelize';
 require("dotenv").config();
 
 const salt = bcrypt.genSaltSync(10);
@@ -105,7 +106,7 @@ const handleUserLogin = async (rawData) => {
                 }
             }
             return {
-                EM: 'VAE user/passwork is incorrect',
+                EM: 'VAE user/password is incorrect',
                 EC: 1,
                 DT: ''
             }
@@ -158,6 +159,7 @@ const getUserWithPagination = async (page, limit) => {
     try {
         let offset = (page - 1) * limit;
         let { count, rows } = await db.Users.findAndCountAll({
+            order: [['vae_id', 'ASC']],
             offset: offset, //số item bỏ đi
             limit: limit, //số item muốn lấy
             attributes: ["id", "vae_user", "vae_id", "group"],
@@ -248,6 +250,36 @@ const deleteUserInfo = async (id) => {
     }
 }
 
+const resetPasswordInfo = async (id) => {
+    try {
+        let user = await db.Users.findOne({
+            where: { id: id }
+        })
+        if (user) {
+            let hashPass = hashPassword('12345678');
+            await db.Users.update({ password: hashPass }, { where: { id: id } });
+            return {
+                EM: 'Reset password sucess',
+                EC: 0,
+                DT: [],
+            }
+        } else {
+            return {
+                EM: 'user not exist',
+                EC: 2,
+                DT: [],
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: 'something wrong with service',
+            EC: 1,
+            DT: [],
+        }
+    }
+}
+
 const changePasswordInfo = async (data) => {
     try {
         let user = await db.Users.findOne({
@@ -289,6 +321,40 @@ const changePasswordInfo = async (data) => {
     }
 }
 
+const handleSearchUser = async (searchValue) => {
+    try {
+        let user = await db.Users.findOne({
+            where: {
+                [Op.or]: [
+                    { vae_id: searchValue },
+                    { vae_user: searchValue }
+                ]
+            },
+            attributes: ["id", "vae_user", "vae_id", "group"],
+        })
+        if (user) {
+            return {
+                EM: 'search user sucessfully',
+                EC: 0,
+                DT: user
+            }
+        } else {
+            return {
+                EM: 'user not found',
+                EC: 2,
+                DT: ''
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
 module.exports = {
-    registerNewUser, handleUserLogin, getAllUser, updateUserInfo, deleteUserInfo, getUserWithPagination, changePasswordInfo
+    registerNewUser, handleUserLogin, getAllUser, updateUserInfo, deleteUserInfo, resetPasswordInfo, getUserWithPagination,
+    changePasswordInfo, handleSearchUser
 }

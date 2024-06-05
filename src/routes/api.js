@@ -20,9 +20,11 @@ const initApiRoutes = (app) => {
 
     router.put("/update", apiController.updateUser);
     router.delete("/delete", apiController.deleteUser);
+    router.put("/resetPassword", apiController.resetPassword);
     router.get("/account", apiController.getUserAccount);
     router.get("/show_user", apiController.showUser);
     router.post("/changePassword", apiController.changePassword);
+    router.post("/search_user", apiController.searchUser)
 
     return app.use("/api/", router);
 }

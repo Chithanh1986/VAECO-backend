@@ -105,8 +105,25 @@ const deleteUser = async (req, res) => {
     }
 }
 
+const resetPassword = async (req, res) => {
+    try {
+        let data = await userServiceApi.resetPasswordInfo(req.body.data.id);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
 const getUserAccount = async (req, res) => {
-    console.log('check user:', req.user)
     return res.status(200).json({
         EM: 'ok', //error message
         EC: 0, //error code
@@ -155,6 +172,24 @@ const changePassword = async (req, res) => {
     }
 }
 
+const searchUser = async (req, res) => {
+    try {
+        let data = await userServiceApi.handleSearchUser(req.body.searchValue);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT, // data
+        })
+    } catch (error) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
 module.exports = {
-    handleRegister, handleLogin, showUser, updateUser, deleteUser, getUserAccount, handleLogout, changePassword
+    handleRegister, handleLogin, showUser, updateUser, deleteUser, resetPassword, getUserAccount, handleLogout, changePassword,
+    searchUser
 }
