@@ -24,7 +24,9 @@ const initApiRoutes = (app) => {
     router.get("/account", apiController.getUserAccount);
     router.get("/show_user", apiController.showUser);
     router.post("/changePassword", apiController.changePassword);
-    router.post("/search_user", apiController.searchUser)
+    router.post("/search_user", apiController.searchUser);
+    router.post("/flight_plan", apiController.uploadFlightPlan);
+    router.post("/load_plan", apiController.loadPlan);
 
     return app.use("/api/", router);
 }

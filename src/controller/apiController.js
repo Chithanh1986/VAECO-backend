@@ -189,7 +189,43 @@ const searchUser = async (req, res) => {
     }
 }
 
+const uploadFlightPlan = async (req, res) => {
+    try {
+        let data = await userServiceApi.uploadPlan(req.body);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: '', // data
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const loadPlan = async (req, res) => {
+    try {
+        let data = await userServiceApi.downloadPlan(req.body);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT, // data
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
 module.exports = {
     handleRegister, handleLogin, showUser, updateUser, deleteUser, resetPassword, getUserAccount, handleLogout, changePassword,
-    searchUser
+    searchUser, uploadFlightPlan, loadPlan
 }

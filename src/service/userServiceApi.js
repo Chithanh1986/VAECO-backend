@@ -381,7 +381,121 @@ const handleSearchUser = async (searchValue) => {
     }
 }
 
+const arrayToString = (flightShip) => {
+    let flightDataShip = [];
+    for (var i = 0; i < flightShip.length; i++) {
+        flightDataShip[i] = flightShip[i].join('/');
+    }
+    flightShip = flightDataShip.join('>');
+    return flightShip;
+}
+
+const stringToArray = (flightShip) => {
+    let flightDataShip = [];
+    flightDataShip = flightShip.split('>');
+    flightShip = flightDataShip;
+    for (var i = 0; i < flightDataShip.length; i++) {
+        flightShip[i] = flightDataShip[i].split('/');
+    }
+    return flightDataShip;
+}
+
+const checkPlanExit = async (date) => {
+    let data = await db.Flight_Plan.findOne({
+        where: { datePlan: date }
+    })
+
+    if (data) { return true; }
+    return false;
+}
+
+const uploadPlan = async (flightPlan) => {
+    try {
+        //Check plan is exit
+        let isPlanExit = await checkPlanExit(flightPlan.flightShip1.flightDate)
+
+        if (isPlanExit) {
+            return {
+                EM: 'Flight plan is already exist',
+                EC: 1,
+            }
+        } else {
+            let flightShip1 = arrayToString(flightPlan.flightShip1.flightData);
+            let flightShip2 = arrayToString(flightPlan.flightShip2.flightData);
+            // create new flight plan
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightShip1.flightDate,
+                rev: flightPlan.flightShip1.rev,
+                ship: flightPlan.flightShip1.ship,
+                planData: flightShip1
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightShip2.flightDate,
+                rev: flightPlan.flightShip2.rev,
+                ship: flightPlan.flightShip2.ship,
+                planData: flightShip2
+            })
+
+            return {
+                EM: 'user created sucessfully',
+                EC: 0
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
+const downloadPlan = async (reqData) => {
+    try {
+        // Check plan is exit
+        let isPlanExit = await checkPlanExit(reqData.date);
+        if (!isPlanExit) {
+            return {
+                EM: 'Flight plan is not exist',
+                EC: 1,
+            }
+        } else {
+            let data = await db.Flight_Plan.findOne({
+                where: {
+                    datePlan: reqData.date,
+                    ship: reqData.ship
+                },
+                attributes: ["rev", "planData", "powerData"],
+            });
+
+            if (data) {
+                let resData = data.dataValues;
+                let flightShip = stringToArray(resData.planData);
+                resData.planData = flightShip;
+                return {
+                    EM: 'Load flight plan sucessfully',
+                    EC: 0,
+                    DT: resData
+                }
+            } else {
+                return {
+                    EM: 'Flight plan not found',
+                    EC: 2,
+                    DT: ''
+                }
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
 module.exports = {
     registerNewUser, handleUserLogin, getAllUser, updateUserInfo, deleteUserInfo, resetPasswordInfo, getUserWithPagination,
-    changePasswordInfo, handleSearchUser
+    changePasswordInfo, handleSearchUser, uploadPlan, downloadPlan
 }
