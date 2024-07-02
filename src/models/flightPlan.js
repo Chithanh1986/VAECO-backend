@@ -18,7 +18,13 @@ module.exports = (sequelize, DataTypes) => {
         rev: DataTypes.STRING,
         ship: DataTypes.STRING,
         planData: DataTypes.TEXT,
-        powerData: DataTypes.STRING
+        powerData: DataTypes.STRING,
+        WOData: DataTypes.TEXT,
+        shipLeader: DataTypes.STRING,
+        handoverShip: DataTypes.STRING,
+        driver: DataTypes.STRING,
+        BDuty: DataTypes.STRING,
+        powerSource: DataTypes.TEXT,
     }, {
         sequelize,
         freezeTableName: true,

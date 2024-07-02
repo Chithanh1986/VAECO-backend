@@ -24,7 +24,24 @@ module.exports = {
       powerData: {
         type: Sequelize.STRING
       },
-
+      WOData: {
+        type: Sequelize.TEXT
+      },
+      shipLeader: {
+        type: Sequelize.STRING
+      },
+      handoverShip: {
+        type: Sequelize.STRING
+      },
+      driver: {
+        type: Sequelize.STRING
+      },
+      BDuty: {
+        type: Sequelize.STRING
+      },
+      powerSource: {
+        type: Sequelize.TEXT
+      }
     });
   },
   async down(queryInterface, Sequelize) {

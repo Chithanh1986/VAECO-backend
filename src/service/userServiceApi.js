@@ -2,6 +2,7 @@ import db, { sequelize } from '../models/index';
 import bcrypt from 'bcrypt';
 import { createJWT } from '../midleware/JWTAction';
 import { Op } from 'sequelize';
+import { name } from 'ejs';
 require("dotenv").config();
 
 const salt = bcrypt.genSaltSync(10);
@@ -381,23 +382,35 @@ const handleSearchUser = async (searchValue) => {
     }
 }
 
-const arrayToString = (flightShip) => {
-    let flightDataShip = [];
-    for (var i = 0; i < flightShip.length; i++) {
-        flightDataShip[i] = flightShip[i].join('/');
+const nestingArrayToString = (arrayData) => {
+    let stringData = [];
+    for (var i = 0; i < arrayData.length; i++) {
+        stringData[i] = arrayData[i].join('/');
     }
-    flightShip = flightDataShip.join('>');
-    return flightShip;
+    arrayData = stringData.join('>');
+    return arrayData;
 }
 
-const stringToArray = (flightShip) => {
-    let flightDataShip = [];
-    flightDataShip = flightShip.split('>');
-    flightShip = flightDataShip;
-    for (var i = 0; i < flightDataShip.length; i++) {
-        flightShip[i] = flightDataShip[i].split('/');
+const stringToNestingArray = (stringData) => {
+    let arrayData = [];
+    arrayData = stringData.split('>');
+    stringData = arrayData;
+    for (var i = 0; i < stringData.length; i++) {
+        arrayData[i] = stringData[i].split('/');
     }
-    return flightDataShip;
+    return arrayData;
+}
+
+const stringToArray = (stringData) => {
+    let arrayData = [];
+    arrayData = stringData.split('/');
+    return arrayData;
+}
+
+const arrayToString = (arrayData) => {
+    let stringData = [];
+    stringData = arrayData.join('/');
+    return stringData;
 }
 
 const checkPlanExit = async (date) => {
@@ -420,21 +433,40 @@ const uploadPlan = async (flightPlan) => {
                 EC: 1,
             }
         } else {
-            let flightShip1 = arrayToString(flightPlan.flightShip1.flightData);
-            let flightShip2 = arrayToString(flightPlan.flightShip2.flightData);
+            let flightShip1 = nestingArrayToString(flightPlan.flightShip1.flightData);
+            let flightShip2 = nestingArrayToString(flightPlan.flightShip2.flightData);
+            let WOData = "1////////>2////////"; //nesting array
+            let shipLeader = "/>/"; //nesting array
+            let handoverShip = "/";
+            let driver = "//>//"; //nesting array
+            let BDuty = "1///>2///>3///>4///>4///"; //nesting array
+            let powerSource = "1///0/0///>2///0/0///>3///0/0///>4///0/0///>5///0/0///>6///0/0///>7///0/0///>8///0/0///>9///0/0///>10///0/0///"; //nesting array
+
             // create new flight plan
             await db.Flight_Plan.create({
                 datePlan: flightPlan.flightShip1.flightDate,
                 rev: flightPlan.flightShip1.rev,
                 ship: flightPlan.flightShip1.ship,
-                planData: flightShip1
+                planData: flightShip1,
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
             })
 
             await db.Flight_Plan.create({
                 datePlan: flightPlan.flightShip2.flightDate,
                 rev: flightPlan.flightShip2.rev,
                 ship: flightPlan.flightShip2.ship,
-                planData: flightShip2
+                planData: flightShip2,
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
             })
 
             return {
@@ -466,13 +498,105 @@ const downloadPlan = async (reqData) => {
                     datePlan: reqData.date,
                     ship: reqData.ship
                 },
-                attributes: ["rev", "planData", "powerData"],
+                attributes: ["rev", "planData", "powerData", "WOData", "shipLeader", "handoverShip", "driver", "BDuty", "powerSource"],
             });
 
             if (data) {
                 let resData = data.dataValues;
-                let flightShip = stringToArray(resData.planData);
+                let flightShipData = stringToNestingArray(resData.planData);
+                let rawWOData = stringToNestingArray(resData.WOData);
+                let shipLeaderData = stringToNestingArray(resData.shipLeader);
+                let handoverShip = stringToArray(resData.handoverShip);
+                let driverData = stringToNestingArray(resData.driver);
+                let BDutyData = stringToNestingArray(resData.BDuty);
+                let powerSourceData = stringToNestingArray(resData.powerSource);
+
+                //handle flightShip data
+                let flightShip = [];
+                flightShipData.map((individualData, index) => {
+                    flightShip[index] = {
+                        STT: index + 1,
+                        AL: individualData[1],
+                        ACReg: individualData[2],
+                        ACType: individualData[3],
+                        ArrNo: individualData[4],
+                        DepNo: individualData[5],
+                        Route: individualData[6],
+                        ETA: individualData[7],
+                        ETD: individualData[8],
+                        Remark: individualData[9],
+                        Parking: individualData[10],
+                        CRS1: individualData[11],
+                        MECH1: individualData[12],
+                        CRS2: individualData[13],
+                        MECH2: individualData[14],
+                    };
+                })
+                //handle rawWOData
+                let WOData = [];
+                rawWOData.map((individualData, index) => {
+                    WOData[index] = {
+                        STT: index + 1,
+                        ACReg: individualData[1],
+                        WONo: individualData[2],
+                        Desc: individualData[3],
+                        Remark: individualData[4],
+                        CRS: individualData[5],
+                        MECH1: individualData[6],
+                        MECH2: individualData[7],
+                        MECH3: individualData[8],
+                    };
+                })
+                //handle shipLeader data
+                let shipLeader = [];
+                shipLeaderData.map((individualData, index) => {
+                    shipLeader[index] = {
+                        leader: individualData[0],
+                        hours: individualData[1]
+                    };
+                })
+                //handle driver data
+                let driver = [];
+                driverData.map((individualData, index) => {
+                    driver[index] = {
+                        driver: individualData[0],
+                        hours: individualData[1],
+                        time: individualData[2]
+                    };
+                })
+                //handle BDyty data
+                let BDuty = [];
+                BDutyData.map((individualData, index) => {
+                    BDuty[index] = {
+                        STT: individualData[0],
+                        name: individualData[1],
+                        func: individualData[2],
+                        hours: individualData[3]
+                    };
+                })
+                //handle powerSource data
+                let powerSource = [];
+                powerSourceData.map((individualData, index) => {
+                    powerSource[index] = {
+                        STT: individualData[0],
+                        ID: individualData[1],
+                        name: individualData[2],
+                        work: individualData[3],
+                        point: individualData[4],
+                        hours: individualData[5],
+                        type: individualData[6],
+                        fromTo: individualData[7]
+                    };
+                })
+
                 resData.planData = flightShip;
+                resData.WOData = WOData;
+                resData.shipLeader = shipLeader;
+                resData.handoverShip = handoverShip;
+                resData.driver = driver;
+                resData.BDuty = BDuty;
+                resData.powerSource = powerSource;
+
                 return {
                     EM: 'Load flight plan sucessfully',
                     EC: 0,
