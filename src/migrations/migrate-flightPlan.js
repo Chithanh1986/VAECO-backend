@@ -21,6 +21,9 @@ module.exports = {
       planData: {
         type: Sequelize.TEXT
       },
+      station: {
+        type: Sequelize.STRING
+      },
       powerData: {
         type: Sequelize.STRING
       },

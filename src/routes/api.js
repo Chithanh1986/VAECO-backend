@@ -27,6 +27,13 @@ const initApiRoutes = (app) => {
     router.post("/search_user", apiController.searchUser);
     router.post("/flight_plan", apiController.uploadFlightPlan);
     router.post("/load_plan", apiController.loadPlan);
+    router.post("/save_plan", apiController.savePlan);
+    router.post("/load_team", apiController.loadTeam);
+    router.post("/create_pointCode", apiController.createPointCode);
+    router.get("/show_pointCode", apiController.showPointCode);
+    router.put("/updatePC", apiController.updatePC);
+    router.delete("/deletePC", apiController.deletePC);
+    router.post("/search_PC", apiController.searchPC);
 
     return app.use("/api/", router);
 }

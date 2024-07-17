@@ -15,20 +15,27 @@ module.exports = {
       vae_id: {
         type: Sequelize.STRING
       },
+      surname: {
+        type: Sequelize.STRING
+      },
+      name: {
+        type: Sequelize.STRING
+      },
+      division: {
+        type: Sequelize.STRING
+      },
+      station: {
+        type: Sequelize.STRING
+      },
       password: {
         type: Sequelize.STRING
       },
       group: {
         type: Sequelize.STRING
       },
-      // createdAt: {
-      //   allowNull: false,
-      //   type: Sequelize.DATE
-      // },
-      // updatedAt: {
-      //   allowNull: false,
-      //   type: Sequelize.DATE
-      // }
+      remark: {
+        type: Sequelize.STRING
+      },
     });
   },
   async down(queryInterface, Sequelize) {

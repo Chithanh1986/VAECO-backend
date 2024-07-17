@@ -155,7 +155,6 @@ const handleLogout = (req, res) => {
 
 const changePassword = async (req, res) => {
     try {
-        console.log('>>>check req', req.body)
         let data = await userServiceApi.changePasswordInfo(req.body);
         return res.status(200).json({
             EM: data.EM, //error message
@@ -225,7 +224,136 @@ const loadPlan = async (req, res) => {
     }
 }
 
+const savePlan = async (req, res) => {
+    try {
+        let data = await userServiceApi.savePlan(req.body.reqData);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: '', // data
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const loadTeam = async (req, res) => {
+    try {
+        let data = await userServiceApi.downloadTeam(req.body);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT, // data
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const createPointCode = async (req, res) => {
+    try {
+        let data = await userServiceApi.createNewPointCode(req.body.pointCode);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: '', // data
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const showPointCode = async (req, res) => {
+    try {
+        if (req.query.page && req.query.limit) {
+            let page = req.query.page;
+            let limit = req.query.limit;
+            let data = await userServiceApi.getPointCodeWithPagination(+page, +limit);//chuyển page và limit sang kiểu số
+            return res.status(200).json({
+                EM: data.EM, //error message
+                EC: data.EC, //error code
+                DT: data.DT
+            })
+        }
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const updatePC = async (req, res) => {
+    try {
+        let data = await userServiceApi.updatePCInfo(req.body.pointCode);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: '', // data
+        })
+
+    } catch (e) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const deletePC = async (req, res) => {
+    try {
+        let data = await userServiceApi.deletePCInfo(req.body.id);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const searchPC = async (req, res) => {
+    try {
+        let data = await userServiceApi.handleSearchPC(req.body.searchValue);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT
+        })
+    } catch (error) {
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
 module.exports = {
     handleRegister, handleLogin, showUser, updateUser, deleteUser, resetPassword, getUserAccount, handleLogout, changePassword,
-    searchUser, uploadFlightPlan, loadPlan
+    searchUser, uploadFlightPlan, loadPlan, savePlan, loadTeam, createPointCode, showPointCode, updatePC, deletePC, searchPC
 }

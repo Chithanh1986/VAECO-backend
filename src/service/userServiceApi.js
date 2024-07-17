@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { createJWT } from '../midleware/JWTAction';
 import { Op } from 'sequelize';
 import { name } from 'ejs';
+import pointCode from '../models/pointCode';
 require("dotenv").config();
 
 const salt = bcrypt.genSaltSync(10);
@@ -63,8 +64,13 @@ const registerNewUser = async (rawUserData) => {
         await db.Users.create({
             vae_user: rawUserData.vae_user,
             vae_id: rawUserData.vae_id,
+            surname: rawUserData.surname,
+            name: rawUserData.name,
+            division: rawUserData.division,
+            station: rawUserData.station,
             password: hashPass,
-            group: rawUserData.group
+            group: rawUserData.group,
+            remark: rawUserData.remark
         })
         return {
             EM: 'user created sucessfully',
@@ -136,6 +142,12 @@ const handleUserLogin = async (rawData) => {
                     EC: 1,
                     DT: ''
                 }
+            } else {
+                return {
+                    EM: 'VAE user/password is incorrect',
+                    EC: 1,
+                    DT: ''
+                }
             }
         }
 
@@ -190,11 +202,7 @@ const getUserWithPagination = async (page, limit) => {
             order: [['vae_id', 'ASC']],
             offset: offset, //số item bỏ đi
             limit: limit, //số item muốn lấy
-            attributes: ["id", "vae_user", "vae_id", "group"],
-            // order: [[vae_id]]
-            // include: { model: db.Group, attributes: ["name"] },
-            // raw: true,
-            // nest: true
+            attributes: ["id", "vae_user", "vae_id", "surname", "name", "division", "station", "group", "remark"],
         })
 
         let totalPages = Math.ceil(count / limit);
@@ -358,7 +366,7 @@ const handleSearchUser = async (searchValue) => {
                     { vae_user: searchValue }
                 ]
             },
-            attributes: ["id", "vae_user", "vae_id", "group"],
+            attributes: ["id", "vae_user", "vae_id", "group", "surname", "name", "division", "remark", "station"],
         })
         if (user) {
             return {
@@ -425,7 +433,7 @@ const checkPlanExit = async (date) => {
 const uploadPlan = async (flightPlan) => {
     try {
         //Check plan is exit
-        let isPlanExit = await checkPlanExit(flightPlan.flightShip1.flightDate)
+        let isPlanExit = await checkPlanExit(flightPlan.flightShip1DAD.flightDate)
 
         if (isPlanExit) {
             return {
@@ -433,10 +441,12 @@ const uploadPlan = async (flightPlan) => {
                 EC: 1,
             }
         } else {
-            let flightShip1 = nestingArrayToString(flightPlan.flightShip1.flightData);
-            let flightShip2 = nestingArrayToString(flightPlan.flightShip2.flightData);
+            let flightShip1DAD = nestingArrayToString(flightPlan.flightShip1DAD.flightData);
+            let flightShip2DAD = nestingArrayToString(flightPlan.flightShip2DAD.flightData);
+            let flightShip1CXR = nestingArrayToString(flightPlan.flightShip1CXR.flightData);
+            let flightShip2CXR = nestingArrayToString(flightPlan.flightShip2CXR.flightData);
             let WOData = "1////////>2////////"; //nesting array
-            let shipLeader = "/>/"; //nesting array
+            let shipLeader = "//>//"; //nesting array
             let handoverShip = "/";
             let driver = "//>//"; //nesting array
             let BDuty = "1///>2///>3///>4///>4///"; //nesting array
@@ -444,10 +454,11 @@ const uploadPlan = async (flightPlan) => {
 
             // create new flight plan
             await db.Flight_Plan.create({
-                datePlan: flightPlan.flightShip1.flightDate,
-                rev: flightPlan.flightShip1.rev,
-                ship: flightPlan.flightShip1.ship,
-                planData: flightShip1,
+                datePlan: flightPlan.flightShip1DAD.flightDate,
+                rev: flightPlan.flightShip1DAD.rev,
+                ship: flightPlan.flightShip1DAD.ship,
+                planData: flightShip1DAD,
+                station: "DAD",
                 WOData: WOData,
                 shipLeader: shipLeader,
                 handoverShip: handoverShip,
@@ -457,10 +468,39 @@ const uploadPlan = async (flightPlan) => {
             })
 
             await db.Flight_Plan.create({
-                datePlan: flightPlan.flightShip2.flightDate,
-                rev: flightPlan.flightShip2.rev,
-                ship: flightPlan.flightShip2.ship,
-                planData: flightShip2,
+                datePlan: flightPlan.flightShip2DAD.flightDate,
+                rev: flightPlan.flightShip2DAD.rev,
+                ship: flightPlan.flightShip2DAD.ship,
+                planData: flightShip2DAD,
+                station: "DAD",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightShip1CXR.flightDate,
+                rev: flightPlan.flightShip1CXR.rev,
+                ship: flightPlan.flightShip1CXR.ship,
+                planData: flightShip1CXR,
+                station: "CXR",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightShip2CXR.flightDate,
+                rev: flightPlan.flightShip2CXR.rev,
+                ship: flightPlan.flightShip2CXR.ship,
+                planData: flightShip2CXR,
+                station: "CXR",
                 WOData: WOData,
                 shipLeader: shipLeader,
                 handoverShip: handoverShip,
@@ -470,7 +510,7 @@ const uploadPlan = async (flightPlan) => {
             })
 
             return {
-                EM: 'user created sucessfully',
+                EM: 'Flight plan created sucessfully',
                 EC: 0
             }
         }
@@ -496,9 +536,10 @@ const downloadPlan = async (reqData) => {
             let data = await db.Flight_Plan.findOne({
                 where: {
                     datePlan: reqData.date,
-                    ship: reqData.ship
+                    ship: reqData.ship,
+                    station: reqData.station
                 },
-                attributes: ["rev", "planData", "powerData", "WOData", "shipLeader", "handoverShip", "driver", "BDuty", "powerSource"],
+                // attributes: ["rev", "planData", "powerData", "WOData", "shipLeader", "handoverShip", "driver", "BDuty", "powerSource"],
             });
 
             if (data) {
@@ -552,7 +593,8 @@ const downloadPlan = async (reqData) => {
                 shipLeaderData.map((individualData, index) => {
                     shipLeader[index] = {
                         leader: individualData[0],
-                        hours: individualData[1]
+                        hours: individualData[1],
+                        fromTo: individualData[2]
                     };
                 })
                 //handle driver data
@@ -561,7 +603,7 @@ const downloadPlan = async (reqData) => {
                     driver[index] = {
                         driver: individualData[0],
                         hours: individualData[1],
-                        time: individualData[2]
+                        fromTo: individualData[2]
                     };
                 })
                 //handle BDyty data
@@ -619,7 +661,347 @@ const downloadPlan = async (reqData) => {
     }
 }
 
+const savePlan = async (reqData) => {
+    try {
+        let serverPlan = db.Flight_Plan.findOne({
+            where: {
+                datePlan: reqData.date,
+                ship: reqData.ship,
+                station: reqData.station
+            },
+        });
+        if (!serverPlan) {
+            return {
+                EM: 'Flight plan is not exist',
+                EC: 1,
+            }
+        } else {
+            //handle planData to string
+            reqData.planData.map((individualData, index) => {
+                let array = [];
+                array.push(individualData.STT);
+                array.push(individualData.AL);
+                array.push(individualData.ACReg);
+                array.push(individualData.ACType);
+                array.push(individualData.ArrNo);
+                array.push(individualData.DepNo);
+                array.push(individualData.Route);
+                array.push(individualData.ETA);
+                array.push(individualData.ETD);
+                array.push(individualData.Remark);
+                array.push(individualData.Parking);
+                array.push(individualData.CRS1);
+                array.push(individualData.MECH1);
+                array.push(individualData.CRS2);
+                array.push(individualData.MECH2);
+                reqData.planData[index] = array;
+            })
+            let planData = nestingArrayToString(reqData.planData);
+            //handle WOData to string
+            reqData.WOData.map((individualData, index) => {
+                let array = [];
+                array.push(individualData.STT);
+                array.push(individualData.ACReg);
+                array.push(individualData.WONo);
+                array.push(individualData.Desc);
+                array.push(individualData.Remark);
+                array.push(individualData.CRS);
+                array.push(individualData.MECH1);
+                array.push(individualData.MECH2);
+                array.push(individualData.MECH3);
+                reqData.WOData[index] = array;
+            })
+            let WOData = nestingArrayToString(reqData.WOData);
+            //handle powerSource to string
+            reqData.powerSource.map((individualData, index) => {
+                let array = [];
+                array.push(individualData.STT);
+                array.push(individualData.ID);
+                array.push(individualData.name);
+                array.push(individualData.work);
+                array.push(individualData.point);
+                array.push(individualData.hours);
+                array.push(individualData.type);
+                array.push(individualData.fromTo);
+                reqData.powerSource[index] = array;
+            })
+            let powerSource = nestingArrayToString(reqData.powerSource);
+            //handle BDuty to string
+            reqData.BDuty.map((individualData, index) => {
+                let array = [];
+                array.push(individualData.STT);
+                array.push(individualData.name);
+                array.push(individualData.func);
+                array.push(individualData.hours);
+                reqData.BDuty[index] = array;
+            })
+            let BDuty = nestingArrayToString(reqData.BDuty);
+            //handle driver to string
+            reqData.driver.map((individualData, index) => {
+                let array = [];
+                array.push(individualData.driver);
+                array.push(individualData.hours);
+                array.push(individualData.fromTo);
+                reqData.driver[index] = array;
+            })
+            let driver = nestingArrayToString(reqData.driver);
+            //handle handoverShip to tring
+            let handoverShip = arrayToString(reqData.handoverShip);
+            //handle shipLeader to string
+            reqData.shipLeader.map((individualData, index) => {
+                let array = [];
+                array.push(individualData.leader);
+                array.push(individualData.hours);
+                array.push(individualData.fromTo);
+                reqData.shipLeader[index] = array;
+            })
+            let shipLeader = nestingArrayToString(reqData.shipLeader);
+            await db.Flight_Plan.update(
+                {
+                    planData: planData,
+                    WOData: WOData,
+                    powerSource: powerSource,
+                    shipLeader: shipLeader,
+                    handoverShip: handoverShip,
+                    driver: driver,
+                    BDuty: BDuty,
+                    powerSource: powerSource,
+                    rev: reqData.rev
+                },
+                {
+                    where: {
+                        datePlan: reqData.date,
+                        ship: reqData.ship,
+                        station: reqData.station
+                    }
+                });
+            return {
+                EM: 'Flight plan update sucessful',
+                EC: 0,
+                DT: [],
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: 'something wrong with service',
+            EC: 1,
+            DT: [],
+        }
+    }
+}
+
+const downloadTeam = async (req) => {
+    try {
+        let users = await db.Users.findAll({
+            where: {
+                division: req.team,
+                station: req.station
+            },
+            attributes: ["id", "vae_id", "surname", "name", "division", "station", "remark"],
+        })
+        if (users) {
+            return {
+                EM: 'search user sucessfully',
+                EC: 0,
+                DT: users
+            }
+        } else {
+            return {
+                EM: 'user not found',
+                EC: 2,
+                DT: ''
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
+const checkPointCodeExist = async (pointCode) => {
+    let data = await db.Point_code.findOne({
+        where: {
+            code: pointCode.code,
+            ACType: pointCode.ACType,
+            type: pointCode.type
+        }
+    })
+
+    if (data) { return true; }
+    return false;
+}
+
+const createNewPointCode = async (pointCode) => {
+    try {
+        //check pointCode is exist
+        let isPointCodeExist = await checkPointCodeExist(pointCode);
+        if (isPointCodeExist === true) {
+            return {
+                EM: 'Point code is already exist',
+                EC: 1,
+            }
+        } else {
+            // create new point code
+            await db.Point_code.create({
+                airline: pointCode.airline,
+                code: pointCode.code,
+                ACType: pointCode.ACType,
+                type: pointCode.type,
+                remark: pointCode.remark,
+                CRSWHour: pointCode.CRSWHour,
+                MECHWHour: pointCode.MECHWHour,
+                CRSWPoint: pointCode.CRSWPoint,
+                MECHWPoint: pointCode.MECHWPoint,
+            })
+            return {
+                EM: 'Point code created sucessfully',
+                EC: 0
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
+const getPointCodeWithPagination = async (page, limit) => {
+    try {
+        let offset = (page - 1) * limit;
+        let { count, rows } = await db.Point_code.findAndCountAll({
+            order: [['airline', 'ASC']],
+            offset: offset, //số item bỏ đi
+            limit: limit, //số item muốn lấy
+        })
+
+        let totalPages = Math.ceil(count / limit);
+        let data = {
+            totalRows: count,
+            totalPages: totalPages,
+            pointCode: rows
+        }
+
+        return {
+            EM: 'get users with pagination satis',
+            EC: 0,
+            DT: data,
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: 'something wrong with service',
+            EC: 1,
+            DT: [],
+        }
+    }
+}
+
+const updatePCInfo = async (pointCode) => {
+    try {
+        let serverpointCode = await db.Point_code.findOne({
+            where: {
+                id: pointCode.id,
+            }
+        })
+        // Update point code
+        if (serverpointCode) {
+            await db.Point_code.update(pointCode, {
+                where: {
+                    id: pointCode.id,
+                }
+            });
+            return {
+                EM: 'Point code updated sucessfully',
+                EC: 0,
+                DT: ''
+            }
+        } else {
+            return {
+                EM: 'Point code not found',
+                EC: 2,
+                DT: ''
+            }
+        }
+
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
+const deletePCInfo = async (id) => {
+    try {
+        let serverpointCode = await db.Point_code.findOne({
+            where: { id: id }
+        })
+        if (serverpointCode) {
+            await serverpointCode.destroy()
+            return {
+                EM: 'delete user sucess',
+                EC: 0,
+                DT: [],
+            }
+        } else {
+            return {
+                EM: 'user not exist',
+                EC: 2,
+                DT: [],
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: 'something wrong with service',
+            EC: 1,
+            DT: [],
+        }
+    }
+}
+
+const handleSearchPC = async (searchValue) => {
+    try {
+        let pointCode = await db.Point_code.findAll({
+            where: {
+                [Op.or]: [
+                    { code: searchValue },
+                    { ACType: searchValue },
+                    { type: searchValue },
+                ]
+            },
+        })
+        if (pointCode) {
+            return {
+                EM: 'search point code sucessfully',
+                EC: 0,
+                DT: pointCode
+            }
+        } else {
+            return {
+                EM: 'Point code not found',
+                EC: 2,
+                DT: ''
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
 module.exports = {
     registerNewUser, handleUserLogin, getAllUser, updateUserInfo, deleteUserInfo, resetPasswordInfo, getUserWithPagination,
-    changePasswordInfo, handleSearchUser, uploadPlan, downloadPlan
+    changePasswordInfo, handleSearchUser, uploadPlan, downloadPlan, savePlan, downloadTeam, createNewPointCode,
+    getPointCodeWithPagination, updatePCInfo, deletePCInfo, handleSearchPC
 }
