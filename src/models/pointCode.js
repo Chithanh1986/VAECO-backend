@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
         code: DataTypes.STRING,
         ACType: DataTypes.STRING,
         type: DataTypes.STRING,
+        maxTime: DataTypes.STRING,
         remark: DataTypes.STRING,
         CRSWHour: DataTypes.STRING,
         MECHWHour: DataTypes.STRING,

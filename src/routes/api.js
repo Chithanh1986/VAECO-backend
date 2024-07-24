@@ -34,6 +34,7 @@ const initApiRoutes = (app) => {
     router.put("/updatePC", apiController.updatePC);
     router.delete("/deletePC", apiController.deletePC);
     router.post("/search_PC", apiController.searchPC);
+    router.get("/show_all_PC", apiController.showAllPC);
 
     return app.use("/api/", router);
 }

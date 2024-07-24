@@ -21,6 +21,9 @@ module.exports = {
             type: {
                 type: Sequelize.STRING
             },
+            maxTime: {
+                type: Sequelize.STRING
+            },
             remark: {
                 type: Sequelize.STRING
             },

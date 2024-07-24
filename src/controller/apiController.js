@@ -353,7 +353,26 @@ const searchPC = async (req, res) => {
     }
 }
 
+const showAllPC = async (req, res) => {
+    try {
+        let data = await userServiceApi.getAllPC();//chuyển page và limit sang kiểu số
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT
+        })
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
 module.exports = {
     handleRegister, handleLogin, showUser, updateUser, deleteUser, resetPassword, getUserAccount, handleLogout, changePassword,
-    searchUser, uploadFlightPlan, loadPlan, savePlan, loadTeam, createPointCode, showPointCode, updatePC, deletePC, searchPC
+    searchUser, uploadFlightPlan, loadPlan, savePlan, loadTeam, createPointCode, showPointCode, updatePC, deletePC, searchPC,
+    showAllPC
 }

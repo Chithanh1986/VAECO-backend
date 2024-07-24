@@ -393,8 +393,13 @@ const handleSearchUser = async (searchValue) => {
 const nestingArrayToString = (arrayData) => {
     let stringData = [];
     for (var i = 0; i < arrayData.length; i++) {
+        for (var j = 0; j < arrayData[i].length; j++) {
+            arrayData[i][j] = arrayData[i][j].toString();
+            arrayData[i][j] = arrayData[i][j].trim();
+        }
         stringData[i] = arrayData[i].join('/');
     }
+
     arrayData = stringData.join('>');
     return arrayData;
 }
@@ -417,6 +422,9 @@ const stringToArray = (stringData) => {
 
 const arrayToString = (arrayData) => {
     let stringData = [];
+    for (var i = 0; i < arrayData.length; i++) {
+        arrayData[i] = arrayData[i].trim()
+    }
     stringData = arrayData.join('/');
     return stringData;
 }
@@ -450,7 +458,7 @@ const uploadPlan = async (flightPlan) => {
             let handoverShip = "/";
             let driver = "//>//"; //nesting array
             let BDuty = "1///>2///>3///>4///>4///"; //nesting array
-            let powerSource = "1///0/0///>2///0/0///>3///0/0///>4///0/0///>5///0/0///>6///0/0///>7///0/0///>8///0/0///>9///0/0///>10///0/0///"; //nesting array
+            let powerSource = "1///0/0/0///>2///0/0/0///>3///0/0/0///>4///0/0/0///>5///0/0/0///>6///0/0/0///>7///0/0/0///>8///0/0/0///>9///0/0/0///>10///0/0/0///"; //nesting array
 
             // create new flight plan
             await db.Flight_Plan.create({
@@ -624,10 +632,11 @@ const downloadPlan = async (reqData) => {
                         ID: individualData[1],
                         name: individualData[2],
                         work: individualData[3],
-                        point: individualData[4],
-                        hours: individualData[5],
-                        type: individualData[6],
-                        fromTo: individualData[7]
+                        WPoint: individualData[4],
+                        WHour: individualData[5],
+                        hours: individualData[6],
+                        type: individualData[7],
+                        fromTo: individualData[8]
                     };
                 })
 
@@ -719,7 +728,8 @@ const savePlan = async (reqData) => {
                 array.push(individualData.ID);
                 array.push(individualData.name);
                 array.push(individualData.work);
-                array.push(individualData.point);
+                array.push(individualData.WPoint);
+                array.push(individualData.WHour);
                 array.push(individualData.hours);
                 array.push(individualData.type);
                 array.push(individualData.fromTo);
@@ -827,7 +837,8 @@ const checkPointCodeExist = async (pointCode) => {
         where: {
             code: pointCode.code,
             ACType: pointCode.ACType,
-            type: pointCode.type
+            type: pointCode.type,
+            remark: pointCode.remark
         }
     })
 
@@ -851,6 +862,7 @@ const createNewPointCode = async (pointCode) => {
                 code: pointCode.code,
                 ACType: pointCode.ACType,
                 type: pointCode.type,
+                maxTime: pointCode.maxTime,
                 remark: pointCode.remark,
                 CRSWHour: pointCode.CRSWHour,
                 MECHWHour: pointCode.MECHWHour,
@@ -1000,8 +1012,35 @@ const handleSearchPC = async (searchValue) => {
     }
 }
 
+const getAllPC = async () => {
+    try {
+        let data = await db.Point_code.findAll();
+        if (data) {
+            return {
+                EM: 'get all point code sucess',
+                EC: 0,
+                DT: data
+            }
+        } else {
+            return {
+                EM: 'data empty',
+                EC: 0,
+                DT: []
+            }
+        }
+    }
+    catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong with service',
+            EC: 1,
+            DT: [],
+        }
+    }
+}
+
 module.exports = {
     registerNewUser, handleUserLogin, getAllUser, updateUserInfo, deleteUserInfo, resetPasswordInfo, getUserWithPagination,
     changePasswordInfo, handleSearchUser, uploadPlan, downloadPlan, savePlan, downloadTeam, createNewPointCode,
-    getPointCodeWithPagination, updatePCInfo, deletePCInfo, handleSearchPC
+    getPointCodeWithPagination, updatePCInfo, deletePCInfo, handleSearchPC, getAllPC
 }
