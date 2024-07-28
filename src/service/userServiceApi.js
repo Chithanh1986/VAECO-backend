@@ -453,11 +453,11 @@ const uploadPlan = async (flightPlan) => {
             let flightShip2DAD = nestingArrayToString(flightPlan.flightShip2DAD.flightData);
             let flightShip1CXR = nestingArrayToString(flightPlan.flightShip1CXR.flightData);
             let flightShip2CXR = nestingArrayToString(flightPlan.flightShip2CXR.flightData);
-            let WOData = "1////////>2////////"; //nesting array
+            let WOData = "1/////////>2/////////"; //nesting array
             let shipLeader = "//>//"; //nesting array
-            let handoverShip = "/";
+            let handoverShip = "///";
             let driver = "//>//"; //nesting array
-            let BDuty = "1///>2///>3///>4///>4///"; //nesting array
+            let BDuty = "1///>2///>3///>4///>5///"; //nesting array
             let powerSource = "1///0/0/0///>2///0/0/0///>3///0/0/0///>4///0/0/0///>5///0/0/0///>6///0/0/0///>7///0/0/0///>8///0/0/0///>9///0/0/0///>10///0/0/0///"; //nesting array
 
             // create new flight plan
@@ -586,14 +586,15 @@ const downloadPlan = async (reqData) => {
                 rawWOData.map((individualData, index) => {
                     WOData[index] = {
                         STT: index + 1,
-                        ACReg: individualData[1],
-                        WONo: individualData[2],
-                        Desc: individualData[3],
-                        Remark: individualData[4],
-                        CRS: individualData[5],
-                        MECH1: individualData[6],
-                        MECH2: individualData[7],
-                        MECH3: individualData[8],
+                        code: individualData[1],
+                        ACReg: individualData[2],
+                        WONo: individualData[3],
+                        Desc: individualData[4],
+                        WHour: individualData[5],
+                        CRS: individualData[6],
+                        MECH1: individualData[7],
+                        MECH2: individualData[8],
+                        MECH3: individualData[9],
                     };
                 })
                 //handle shipLeader data
@@ -710,10 +711,11 @@ const savePlan = async (reqData) => {
             reqData.WOData.map((individualData, index) => {
                 let array = [];
                 array.push(individualData.STT);
+                array.push(individualData.code);
                 array.push(individualData.ACReg);
                 array.push(individualData.WONo);
                 array.push(individualData.Desc);
-                array.push(individualData.Remark);
+                array.push(individualData.WHour);
                 array.push(individualData.CRS);
                 array.push(individualData.MECH1);
                 array.push(individualData.MECH2);
