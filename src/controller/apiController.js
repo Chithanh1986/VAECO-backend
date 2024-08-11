@@ -371,8 +371,44 @@ const showAllPC = async (req, res) => {
     }
 }
 
+const groupUsers = async (req, res) => {
+    try {
+        let data = await userServiceApi.getGroupUsers(req.body);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT
+        })
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
+const powerData = async (req, res) => {
+    try {
+        let data = await userServiceApi.getPowerData(req.body.date);
+        return res.status(200).json({
+            EM: data.EM, //error message
+            EC: data.EC, //error code
+            DT: data.DT
+        })
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({
+            EM: 'error from server', //error message
+            EC: '-1', //error code
+            DT: '', // data
+        })
+    }
+}
+
 module.exports = {
     handleRegister, handleLogin, showUser, updateUser, deleteUser, resetPassword, getUserAccount, handleLogout, changePassword,
     searchUser, uploadFlightPlan, loadPlan, savePlan, loadTeam, createPointCode, showPointCode, updatePC, deletePC, searchPC,
-    showAllPC
+    showAllPC, groupUsers, powerData
 }

@@ -35,6 +35,8 @@ const initApiRoutes = (app) => {
     router.delete("/deletePC", apiController.deletePC);
     router.post("/search_PC", apiController.searchPC);
     router.get("/show_all_PC", apiController.showAllPC);
+    router.post("/getGroupUsers", apiController.groupUsers);
+    router.post("/getPowerData", apiController.powerData);
 
     return app.use("/api/", router);
 }

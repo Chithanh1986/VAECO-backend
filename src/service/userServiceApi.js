@@ -438,15 +438,153 @@ const checkPlanExit = async (date) => {
     return false;
 }
 
+const comparePlan = (newPlan, oldPlan) => {
+    newPlan.map((individualData, index) => {
+        newPlan[index] = {
+            STT: index + 1,
+            AL: individualData[1],
+            ACReg: individualData[2],
+            ACType: individualData[3],
+            ArrNo: individualData[4],
+            DepNo: individualData[5],
+            Route: individualData[6],
+            ETA: individualData[7],
+            ETD: individualData[8],
+            Remark: individualData[9],
+            Parking: individualData[10],
+            CRS1: individualData[11],
+            MECH1: individualData[12],
+            CRS2: individualData[13],
+            MECH2: individualData[14],
+        };
+    })
+    newPlan.map((individual, index) => {
+        oldPlan.map((item, i) => {
+            if (individual.ArrNo === item.ArrNo && individual.DepNo === item.DepNo && individual.ETA === item.ETA && individual.ETD === item.ETD) {
+                individual.Parking = item.Parking;
+                individual.CRS1 = item.CRS1;
+                individual.MECH1 = item.MECH1;
+                individual.CRS2 = item.CRS2;
+                individual.MECH2 = item.MECH2;
+            }
+        })
+    })
+    newPlan.map((individualData, index) => {
+        let array = [];
+        array.push(individualData.STT);
+        array.push(individualData.AL);
+        array.push(individualData.ACReg);
+        array.push(individualData.ACType);
+        array.push(individualData.ArrNo);
+        array.push(individualData.DepNo);
+        array.push(individualData.Route);
+        array.push(individualData.ETA);
+        array.push(individualData.ETD);
+        array.push(individualData.Remark);
+        array.push(individualData.Parking);
+        array.push(individualData.CRS1);
+        array.push(individualData.MECH1);
+        array.push(individualData.CRS2);
+        array.push(individualData.MECH2);
+        newPlan[index] = array;
+    })
+    newPlan = nestingArrayToString(newPlan);
+    return newPlan;
+}
+
 const uploadPlan = async (flightPlan) => {
     try {
         //Check plan is exit
         let isPlanExit = await checkPlanExit(flightPlan.flightShip1DAD.flightDate)
-
         if (isPlanExit) {
+            //DAD morning ship
+            let searchData = {
+                date: flightPlan.flightShip1DAD.flightDate,
+                ship: "MO",
+                station: "DAD"
+            }
+            let oldPlan = await downloadPlan(searchData);
+            oldPlan = oldPlan.DT.planData;
+            let newPlan = await comparePlan(flightPlan.flightShip1DAD.flightData, oldPlan);
+            await db.Flight_Plan.update(
+                {
+                    planData: newPlan,
+                    rev: flightPlan.flightShip1DAD.rev
+                },
+                {
+                    where: {
+                        datePlan: flightPlan.flightShip1DAD.flightDate,
+                        ship: "MO",
+                        station: "DAD"
+                    }
+                });
+            //DAD everning ship
+            searchData = {
+                date: flightPlan.flightShip2DAD.flightDate,
+                ship: "EV",
+                station: "DAD"
+            }
+            oldPlan = await downloadPlan(searchData);
+            oldPlan = oldPlan.DT.planData;
+            newPlan = await comparePlan(flightPlan.flightShip2DAD.flightData, oldPlan);
+            await db.Flight_Plan.update(
+                {
+                    planData: newPlan,
+                    rev: flightPlan.flightShip2DAD.rev
+                },
+                {
+                    where: {
+                        datePlan: flightPlan.flightShip2DAD.flightDate,
+                        ship: "EV",
+                        station: "DAD"
+                    }
+                });
+            //CXR morning ship
+            searchData = {
+                date: flightPlan.flightShip1CXR.flightDate,
+                ship: "MO",
+                station: "CXR"
+            }
+            oldPlan = await downloadPlan(searchData);
+            oldPlan = oldPlan.DT.planData;
+            newPlan = await comparePlan(flightPlan.flightShip1CXR.flightData, oldPlan);
+            await db.Flight_Plan.update(
+                {
+                    planData: newPlan,
+                    rev: flightPlan.flightShip1CXR.rev
+                },
+                {
+                    where: {
+                        datePlan: flightPlan.flightShip1CXR.flightDate,
+                        ship: "MO",
+                        station: "CXR"
+                    }
+                });
+            //CXR everning ship
+            searchData = {
+                date: flightPlan.flightShip2CXR.flightDate,
+                ship: "EV",
+                station: "CXR"
+            }
+            oldPlan = await downloadPlan(searchData);
+            oldPlan = oldPlan.DT.planData;
+            newPlan = await comparePlan(flightPlan.flightShip2CXR.flightData, oldPlan);
+            await db.Flight_Plan.update(
+                {
+                    planData: newPlan,
+                    rev: flightPlan.flightShip2CXR.rev
+                },
+                {
+                    where: {
+                        datePlan: flightPlan.flightShip2CXR.flightDate,
+                        ship: "EV",
+                        station: "CXR"
+                    }
+                });
+
             return {
-                EM: 'Flight plan is already exist',
-                EC: 1,
+                EM: 'Flight plan update sucessfully',
+                EC: 0
             }
         } else {
             let flightShip1DAD = nestingArrayToString(flightPlan.flightShip1DAD.flightData);
@@ -516,12 +654,12 @@ const uploadPlan = async (flightPlan) => {
                 BDuty: BDuty,
                 powerSource: powerSource
             })
-
-            return {
-                EM: 'Flight plan created sucessfully',
-                EC: 0
-            }
         }
+        return {
+            EM: 'Flight plan created sucessfully',
+            EC: 0
+        }
+
     } catch (error) {
         console.log(error)
         return {
@@ -788,7 +926,7 @@ const savePlan = async (reqData) => {
                     }
                 });
             return {
-                EM: 'Flight plan update sucessful',
+                EM: 'Save flight plan sucessful',
                 EC: 0,
                 DT: [],
             }
@@ -1041,8 +1179,86 @@ const getAllPC = async () => {
     }
 }
 
+const getGroupUsers = async (req) => {
+    try {
+        let users = await db.Users.findAll({
+            where: {
+                division: req.division,
+                station: req.station
+            },
+            attributes: ["id", "vae_id", "surname", "name", "division"],
+            order: [['name', 'ASC']],
+        })
+        if (users) {
+            return {
+                EM: 'search user sucessfully',
+                EC: 0,
+                DT: users
+            }
+        } else {
+            return {
+                EM: 'user not found',
+                EC: 2,
+                DT: ''
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
+const getPowerData = async (date) => {
+    try {
+        let data = await db.Flight_Plan.findAll({
+            where: {
+                datePlan: date
+            },
+            attributes: ["powerSource"],
+        })
+        if (data) {
+            for (var i = 0; i < data.length; i++) {
+                data[i] = stringToNestingArray(data[i].powerSource);
+                data[i].map((individualData, index) => {
+                    data[i][index] = {
+                        STT: individualData[0],
+                        ID: individualData[1],
+                        name: individualData[2],
+                        work: individualData[3],
+                        WPoint: individualData[4],
+                        WHour: individualData[5],
+                        hours: individualData[6],
+                        type: individualData[7],
+                        fromTo: individualData[8]
+                    };
+                })
+            }
+            return {
+                EM: 'search powerSource sucessfully',
+                EC: 0,
+                DT: data
+            }
+        } else {
+            return {
+                EM: 'powerSource not found',
+                EC: 2,
+                DT: ''
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
 module.exports = {
     registerNewUser, handleUserLogin, getAllUser, updateUserInfo, deleteUserInfo, resetPasswordInfo, getUserWithPagination,
     changePasswordInfo, handleSearchUser, uploadPlan, downloadPlan, savePlan, downloadTeam, createNewPointCode,
-    getPointCodeWithPagination, updatePCInfo, deletePCInfo, handleSearchPC, getAllPC
+    getPointCodeWithPagination, updatePCInfo, deletePCInfo, handleSearchPC, getAllPC, getGroupUsers, getPowerData
 }

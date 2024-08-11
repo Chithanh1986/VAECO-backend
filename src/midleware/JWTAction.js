@@ -1,7 +1,9 @@
 require("dotenv").config();
 import jwt from "jsonwebtoken";
 
-const nonSecurePaths = ['/login'];
+const nonSecurePaths = ["/login"];
+const publishPaths = ["/login", "/account", "/show_pointCode", "/search_PC", "/load_plan", "/show_all_PC", "/load_team"];
+const leaderPaths = ["/load_team", "/search_user", "/update", "/flight_plan", "/save_plan"];
 
 const createJWT = (payload) => {
     let key = process.env.JWT_SECRET;
@@ -35,7 +37,6 @@ const extractToken = (req) => {
 const checkUserJWT = (req, res, next) => {
     if (nonSecurePaths.includes(req.path)) return next();
     let cookies = req.cookies;
-
     if (cookies && cookies.jwt) {
         let decoded = verifyToken(cookies.jwt);
         if (decoded) {
@@ -60,13 +61,12 @@ const checkUserJWT = (req, res, next) => {
 }
 
 const checkUserPermission = (req, res, next) => {
-    if (nonSecurePaths.includes(req.path) || req.path === '/account') return next();
+    if (publishPaths.includes(req.path)) return next();
     if (req.user) {
         let vae_user = req.user.vae_user;
         let group = req.user.group;
         let currentUrl = req.path;
         if (!group || group.length === 0) {
-
             return res.status(403).json({
                 EC: -1,
                 EM: 'do not permission to access',
@@ -76,13 +76,17 @@ const checkUserPermission = (req, res, next) => {
             if (group === "admin") {
                 next();
             } else {
-                return res.status(403).json({
-                    EC: -1,
-                    EM: 'Do not permission to access',
-                    DT: ''
-                })
-            }
+                if (group === "leader" && leaderPaths.includes(req.path)) {
+                    next();
+                } else {
+                    return res.status(403).json({
+                        EC: -1,
+                        EM: 'Do not permission to access',
+                        DT: ''
+                    })
+                }
 
+            }
         }
     } else {
         return res.status(401).json({
