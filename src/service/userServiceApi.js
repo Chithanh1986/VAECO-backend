@@ -495,92 +495,256 @@ const comparePlan = (newPlan, oldPlan) => {
 const uploadPlan = async (flightPlan) => {
     try {
         //Check plan is exit
-        let isPlanExit = await checkPlanExit(flightPlan.flightShip1DAD.flightDate)
+        let checkDate = "";
+        if (flightPlan.flightShip1DAD.flightDate) { checkDate = flightPlan.flightShip1DAD.flightDate }
+        if (flightPlan.flightShip1CXR.flightDate) { checkDate = flightPlan.flightShip1CXR.flightDate }
+        if (flightPlan.flightDataVDH.flightDate) { checkDate = flightPlan.flightDataVDH.flightDate }
+        if (flightPlan.flightDataHUI.flightDate) { checkDate = flightPlan.flightDataHUI.flightDate }
+        if (flightPlan.flightDataVCL.flightDate) { checkDate = flightPlan.flightDataVCL.flightDate }
+        if (flightPlan.flightDataUIH.flightDate) { checkDate = flightPlan.flightDataUIH.flightDate }
+        if (flightPlan.flightDataTBB.flightDate) { checkDate = flightPlan.flightDataTBB.flightDate }
+        if (flightPlan.flightDataPXU.flightDate) { checkDate = flightPlan.flightDataPXU.flightDate }
+        let isPlanExit = await checkPlanExit(checkDate)
+        let searchData = {};
+        let oldPlan = {};
+        let newPlan = {};
         if (isPlanExit) {
-            //DAD morning ship
-            let searchData = {
-                date: flightPlan.flightShip1DAD.flightDate,
-                ship: "MO",
-                station: "DAD"
+            if (flightPlan.flightShip1DAD.flightData.length > 0) {
+                //DAD morning ship
+                searchData = {
+                    date: flightPlan.flightShip1DAD.flightDate,
+                    ship: "MO",
+                    station: "DAD"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightShip1DAD.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightShip1DAD.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightShip1DAD.flightDate,
+                            ship: "MO",
+                            station: "DAD"
+                        }
+                    });
+
+                //DAD everning ship
+                searchData = {
+                    date: flightPlan.flightShip2DAD.flightDate,
+                    ship: "EV",
+                    station: "DAD"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightShip2DAD.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightShip2DAD.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightShip2DAD.flightDate,
+                            ship: "EV",
+                            station: "DAD"
+                        }
+                    });
             }
-            let oldPlan = await downloadPlan(searchData);
-            oldPlan = oldPlan.DT.planData;
-            let newPlan = await comparePlan(flightPlan.flightShip1DAD.flightData, oldPlan);
-            await db.Flight_Plan.update(
-                {
-                    planData: newPlan,
-                    rev: flightPlan.flightShip1DAD.rev
-                },
-                {
-                    where: {
-                        datePlan: flightPlan.flightShip1DAD.flightDate,
-                        ship: "MO",
-                        station: "DAD"
-                    }
-                });
-            //DAD everning ship
-            searchData = {
-                date: flightPlan.flightShip2DAD.flightDate,
-                ship: "EV",
-                station: "DAD"
+
+            if (flightPlan.flightShip1CXR.flightData.length > 0) {
+                //CXR morning ship
+                searchData = {
+                    date: flightPlan.flightShip1CXR.flightDate,
+                    ship: "MO",
+                    station: "CXR"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightShip1CXR.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightShip1CXR.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightShip1CXR.flightDate,
+                            ship: "MO",
+                            station: "CXR"
+                        }
+                    });
+
+                //CXR everning ship
+                searchData = {
+                    date: flightPlan.flightShip2CXR.flightDate,
+                    ship: "EV",
+                    station: "CXR"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightShip2CXR.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightShip2CXR.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightShip2CXR.flightDate,
+                            ship: "EV",
+                            station: "CXR"
+                        }
+                    });
             }
-            oldPlan = await downloadPlan(searchData);
-            oldPlan = oldPlan.DT.planData;
-            newPlan = await comparePlan(flightPlan.flightShip2DAD.flightData, oldPlan);
-            await db.Flight_Plan.update(
-                {
-                    planData: newPlan,
-                    rev: flightPlan.flightShip2DAD.rev
-                },
-                {
-                    where: {
-                        datePlan: flightPlan.flightShip2DAD.flightDate,
-                        ship: "EV",
-                        station: "DAD"
-                    }
-                });
-            //CXR morning ship
-            searchData = {
-                date: flightPlan.flightShip1CXR.flightDate,
-                ship: "MO",
-                station: "CXR"
+
+            if (flightPlan.flightDataVDH.flightData.length > 0) {
+                //VHD
+                searchData = {
+                    date: flightPlan.flightDataVDH.flightDate,
+                    ship: "MO",
+                    station: "VDH"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightDataVDH.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightDataVDH.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightDataVDH.flightDate,
+                            ship: "MO",
+                            station: "VDH"
+                        }
+                    });
             }
-            oldPlan = await downloadPlan(searchData);
-            oldPlan = oldPlan.DT.planData;
-            newPlan = await comparePlan(flightPlan.flightShip1CXR.flightData, oldPlan);
-            await db.Flight_Plan.update(
-                {
-                    planData: newPlan,
-                    rev: flightPlan.flightShip1CXR.rev
-                },
-                {
-                    where: {
-                        datePlan: flightPlan.flightShip1CXR.flightDate,
-                        ship: "MO",
-                        station: "CXR"
-                    }
-                });
-            //CXR everning ship
-            searchData = {
-                date: flightPlan.flightShip2CXR.flightDate,
-                ship: "EV",
-                station: "CXR"
+
+            if (flightPlan.flightDataHUI.flightData.length > 0) {
+                //HUI
+                searchData = {
+                    date: flightPlan.flightDataHUI.flightDate,
+                    ship: "MO",
+                    station: "HUI"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightDataHUI.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightDataHUI.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightDataHUI.flightDate,
+                            ship: "MO",
+                            station: "HUI"
+                        }
+                    });
             }
-            oldPlan = await downloadPlan(searchData);
-            oldPlan = oldPlan.DT.planData;
-            newPlan = await comparePlan(flightPlan.flightShip2CXR.flightData, oldPlan);
-            await db.Flight_Plan.update(
-                {
-                    planData: newPlan,
-                    rev: flightPlan.flightShip2CXR.rev
-                },
-                {
-                    where: {
-                        datePlan: flightPlan.flightShip2CXR.flightDate,
-                        ship: "EV",
-                        station: "CXR"
-                    }
-                });
+
+            if (flightPlan.flightDataVCL.flightData.length > 0) {
+                //VCL
+                searchData = {
+                    date: flightPlan.flightDataVCL.flightDate,
+                    ship: "MO",
+                    station: "VCL"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightDataVCL.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightDataVCL.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightDataVCL.flightDate,
+                            ship: "MO",
+                            station: "VCL"
+                        }
+                    });
+            }
+
+            if (flightPlan.flightDataUIH.flightData.length > 0) {
+                //UIH
+                searchData = {
+                    date: flightPlan.flightDataUIH.flightDate,
+                    ship: "MO",
+                    station: "UIH"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightDataUIH.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightDataUIH.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightDataUIH.flightDate,
+                            ship: "MO",
+                            station: "UIH"
+                        }
+                    });
+            }
+
+            if (flightPlan.flightDataTBB.flightData.length > 0) {
+                //TBB
+                searchData = {
+                    date: flightPlan.flightDataTBB.flightDate,
+                    ship: "MO",
+                    station: "TBB"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightDataTBB.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightDataTBB.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightDataTBB.flightDate,
+                            ship: "MO",
+                            station: "TBB"
+                        }
+                    });
+            }
+
+            if (flightPlan.flightDataPXU.flightData.length > 0) {
+                //PXU
+                searchData = {
+                    date: flightPlan.flightDataPXU.flightDate,
+                    ship: "MO",
+                    station: "PXU"
+                }
+                oldPlan = await downloadPlan(searchData);
+                oldPlan = oldPlan.DT.planData;
+                newPlan = await comparePlan(flightPlan.flightDataPXU.flightData, oldPlan);
+                await db.Flight_Plan.update(
+                    {
+                        planData: newPlan,
+                        rev: flightPlan.flightDataPXU.rev
+                    },
+                    {
+                        where: {
+                            datePlan: flightPlan.flightDataPXU.flightDate,
+                            ship: "MO",
+                            station: "PXU"
+                        }
+                    });
+
+            }
 
             return {
                 EM: 'Flight plan update sucessfully',
@@ -591,12 +755,36 @@ const uploadPlan = async (flightPlan) => {
             let flightShip2DAD = nestingArrayToString(flightPlan.flightShip2DAD.flightData);
             let flightShip1CXR = nestingArrayToString(flightPlan.flightShip1CXR.flightData);
             let flightShip2CXR = nestingArrayToString(flightPlan.flightShip2CXR.flightData);
+            let flightVDH = "";
+            if (flightPlan.flightDataVDH.flightData.length > 0) {
+                flightVDH = nestingArrayToString(flightPlan.flightDataVDH.flightData);
+            }
+            let flightHUI = "";
+            if (flightPlan.flightDataHUI.flightData.length > 0) {
+                flightHUI = nestingArrayToString(flightPlan.flightDataHUI.flightData);
+            }
+            let flightVCL = "";
+            if (flightPlan.flightDataVCL.flightData.length > 0) {
+                flightVCL = nestingArrayToString(flightPlan.flightDataVCL.flightData);
+            }
+            let flightUIH = "";
+            if (flightPlan.flightDataUIH.flightData.length > 0) {
+                flightUIH = nestingArrayToString(flightPlan.flightDataUIH.flightData);
+            }
+            let flightTBB = "";
+            if (flightPlan.flightDataTBB.flightData.length > 0) {
+                flightTBB = nestingArrayToString(flightPlan.flightDataTBB.flightData);
+            }
+            let flightPXU = "";
+            if (flightPlan.flightDataPXU.flightData.length > 0) {
+                flightPXU = nestingArrayToString(flightPlan.flightDataPXU.flightData);
+            }
             let WOData = "1/////////>2/////////"; //nesting array
             let shipLeader = "//>//"; //nesting array
             let handoverShip = "///";
-            let driver = "//>//"; //nesting array
+            let driver = "//>//>//stby"; //nesting array
             let BDuty = "1///>2///>3///>4///>5///"; //nesting array
-            let powerSource = "1///0/0/0///>2///0/0/0///>3///0/0/0///>4///0/0/0///>5///0/0/0///>6///0/0/0///>7///0/0/0///>8///0/0/0///>9///0/0/0///>10///0/0/0///"; //nesting array
+            let powerSource = "1///0/0/0////>2///0/0/0////>3///0/0/0////>4///0/0/0////>5///0/0/0////>6///0/0/0////>7///0/0/0////>8///0/0/0////>9///0/0/0////>10///0/0/0////"; //nesting array
 
             // create new flight plan
             await db.Flight_Plan.create({
@@ -647,6 +835,90 @@ const uploadPlan = async (flightPlan) => {
                 ship: flightPlan.flightShip2CXR.ship,
                 planData: flightShip2CXR,
                 station: "CXR",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightDataVDH.flightDate,
+                rev: flightPlan.flightDataVDH.rev,
+                ship: flightPlan.flightDataVDH.ship,
+                planData: flightVDH,
+                station: "VDH",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightDataHUI.flightDate,
+                rev: flightPlan.flightDataHUI.rev,
+                ship: flightPlan.flightDataHUI.ship,
+                planData: flightHUI,
+                station: "HUI",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightDataVCL.flightDate,
+                rev: flightPlan.flightDataVCL.rev,
+                ship: flightPlan.flightDataVCL.ship,
+                planData: flightVCL,
+                station: "VCL",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightDataUIH.flightDate,
+                rev: flightPlan.flightDataUIH.rev,
+                ship: flightPlan.flightDataUIH.ship,
+                planData: flightUIH,
+                station: "UIH",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightDataTBB.flightDate,
+                rev: flightPlan.flightDataTBB.rev,
+                ship: flightPlan.flightDataTBB.ship,
+                planData: flightTBB,
+                station: "TBB",
+                WOData: WOData,
+                shipLeader: shipLeader,
+                handoverShip: handoverShip,
+                driver: driver,
+                BDuty: BDuty,
+                powerSource: powerSource
+            })
+
+            await db.Flight_Plan.create({
+                datePlan: flightPlan.flightDataPXU.flightDate,
+                rev: flightPlan.flightDataPXU.rev,
+                ship: flightPlan.flightDataPXU.ship,
+                planData: flightPXU,
+                station: "PXU",
                 WOData: WOData,
                 shipLeader: shipLeader,
                 handoverShip: handoverShip,
@@ -775,7 +1047,8 @@ const downloadPlan = async (reqData) => {
                         WHour: individualData[5],
                         hours: individualData[6],
                         type: individualData[7],
-                        fromTo: individualData[8]
+                        fromTo: individualData[8],
+                        remark: individualData[9]
                     };
                 })
 
@@ -873,6 +1146,7 @@ const savePlan = async (reqData) => {
                 array.push(individualData.hours);
                 array.push(individualData.type);
                 array.push(individualData.fromTo);
+                array.push(individualData.remark);
                 reqData.powerSource[index] = array;
             })
             let powerSource = nestingArrayToString(reqData.powerSource);
