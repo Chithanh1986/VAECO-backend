@@ -37,6 +37,8 @@ const initApiRoutes = (app) => {
     router.get("/show_all_PC", apiController.showAllPC);
     router.post("/getGroupUsers", apiController.groupUsers);
     router.post("/getPowerData", apiController.powerData);
+    router.post("/saveEA", apiController.saveEA);
+    router.post("/loadEA", apiController.loadEA);
 
     return app.use("/api/", router);
 }

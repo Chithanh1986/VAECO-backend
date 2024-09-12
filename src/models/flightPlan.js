@@ -19,7 +19,6 @@ module.exports = (sequelize, DataTypes) => {
         ship: DataTypes.STRING,
         planData: DataTypes.TEXT,
         station: DataTypes.STRING,
-        powerData: DataTypes.STRING,
         WOData: DataTypes.TEXT,
         shipLeader: DataTypes.STRING,
         handoverShip: DataTypes.STRING,

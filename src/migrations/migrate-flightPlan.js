@@ -24,9 +24,6 @@ module.exports = {
       station: {
         type: Sequelize.STRING
       },
-      powerData: {
-        type: Sequelize.STRING
-      },
       WOData: {
         type: Sequelize.TEXT
       },

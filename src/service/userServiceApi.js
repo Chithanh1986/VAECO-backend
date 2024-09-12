@@ -397,26 +397,26 @@ const nestingArrayToString = (arrayData) => {
             arrayData[i][j] = arrayData[i][j].toString();
             arrayData[i][j] = arrayData[i][j].trim();
         }
-        stringData[i] = arrayData[i].join('/');
+        stringData[i] = arrayData[i].join('|');
     }
 
-    arrayData = stringData.join('>');
+    arrayData = stringData.join('<>');
     return arrayData;
 }
 
 const stringToNestingArray = (stringData) => {
     let arrayData = [];
-    arrayData = stringData.split('>');
+    arrayData = stringData.split('<>');
     stringData = arrayData;
     for (var i = 0; i < stringData.length; i++) {
-        arrayData[i] = stringData[i].split('/');
+        arrayData[i] = stringData[i].split('|');
     }
     return arrayData;
 }
 
 const stringToArray = (stringData) => {
     let arrayData = [];
-    arrayData = stringData.split('/');
+    arrayData = stringData.split('|');
     return arrayData;
 }
 
@@ -425,7 +425,7 @@ const arrayToString = (arrayData) => {
     for (var i = 0; i < arrayData.length; i++) {
         arrayData[i] = arrayData[i].trim()
     }
-    stringData = arrayData.join('/');
+    stringData = arrayData.join('|');
     return stringData;
 }
 
@@ -436,6 +436,21 @@ const checkPlanExit = async (date) => {
 
     if (data) { return true; }
     return false;
+}
+
+const convertTime = (time) => {
+    if (time.includes("+")) {
+        let newTime = time.split("+");
+        newTime = newTime[0].split(":");
+        newTime = ((+newTime[0]) + 24) * 60 + (+newTime[1]);
+        return newTime;
+    } else {
+        let newTime = time.split(":");
+        newTime = (+newTime[0]) * 60 + (+newTime[1]);
+        return newTime;
+    }
+
+
 }
 
 const comparePlan = (newPlan, oldPlan) => {
@@ -460,12 +475,25 @@ const comparePlan = (newPlan, oldPlan) => {
     })
     newPlan.map((individual, index) => {
         oldPlan.map((item, i) => {
-            if (individual.ArrNo === item.ArrNo && individual.DepNo === item.DepNo && individual.ETA === item.ETA && individual.ETD === item.ETD) {
+            if (individual.ArrNo === item.ArrNo) {
                 individual.Parking = item.Parking;
                 individual.CRS1 = item.CRS1;
                 individual.MECH1 = item.MECH1;
                 individual.CRS2 = item.CRS2;
                 individual.MECH2 = item.MECH2;
+                let newDepTime = convertTime(individual.ETD);
+                let oldDepTime = convertTime(item.ETD);
+                if ((newDepTime - oldDepTime) > 30) {
+                    if (!individual.Remark.includes("DELAY")) {
+                        individual.Remark = individual.Remark + ", DELAY";
+                    }
+                }
+                if (individual.ACType !== item.ACType) {
+                    individual.Remark = individual.Remark + ", CHANGE A/C TYPE";
+                }
+                if (individual.DepNo !== item.DepNo) {
+                    individual.Remark = individual.Remark + ", CHANGE ROUTE";
+                }
             }
         })
     })
@@ -508,6 +536,33 @@ const uploadPlan = async (flightPlan) => {
         let searchData = {};
         let oldPlan = {};
         let newPlan = {};
+        //Clear plan 2 year ago
+        let clearDate = checkDate.split("/");
+        if (+clearDate[0] <= 28) {
+            let searchDate = clearDate[0] + "/" + clearDate[1] + "/" + (+clearDate[2] - 2).toString();
+            let searchResult = await checkPlanExit(searchDate);
+            if (searchResult) {
+                await db.Flight_Plan.destroy({
+                    where: {
+                        datePlan: searchDate
+                    }
+                });
+            }
+        } else {
+            for (var i = 29; i <= 31; i++) {
+                let searchDate = i.toString() + "/" + clearDate[1] + "/" + (+clearDate[2] - 2).toString();
+                let searchResult = await checkPlanExit(searchDate);
+                if (searchResult) {
+                    await db.Flight_Plan.destroy({
+                        where: {
+                            datePlan: searchDate
+                        }
+                    });
+                }
+            }
+        }
+
+        //Update plan
         if (isPlanExit) {
             if (flightPlan.flightShip1DAD.flightData.length > 0) {
                 //DAD morning ship
@@ -779,12 +834,12 @@ const uploadPlan = async (flightPlan) => {
             if (flightPlan.flightDataPXU.flightData.length > 0) {
                 flightPXU = nestingArrayToString(flightPlan.flightDataPXU.flightData);
             }
-            let WOData = "1/////////>2/////////"; //nesting array
-            let shipLeader = "//>//"; //nesting array
-            let handoverShip = "///";
-            let driver = "//>//>//stby"; //nesting array
-            let BDuty = "1///>2///>3///>4///>5///"; //nesting array
-            let powerSource = "1///0/0/0////>2///0/0/0////>3///0/0/0////>4///0/0/0////>5///0/0/0////>6///0/0/0////>7///0/0/0////>8///0/0/0////>9///0/0/0////>10///0/0/0////"; //nesting array
+            let WOData = "1|||||||||<>2|||||||||"; //nesting array
+            let shipLeader = "||<>||"; //nesting array
+            let handoverShip = "|||";
+            let driver = "||<>||<>||stby"; //nesting array
+            let BDuty = "1||||<>2||||<>3||||<>4||||<>5||||"; //nesting array
+            let powerSource = "1|||0|0|0||||<>2|||0|0|0||||<>3|||0|0|0||||<>4|||0|0|0||||<>5|||0|0|0||||<>6|||0|0|0||||<>7|||0|0|0||||<>8|||0|0|0||||<>9|||0|0|0||||<>10|||0|0|0||||"; //nesting array
 
             // create new flight plan
             await db.Flight_Plan.create({
@@ -926,12 +981,12 @@ const uploadPlan = async (flightPlan) => {
                 BDuty: BDuty,
                 powerSource: powerSource
             })
-        }
-        return {
-            EM: 'Flight plan created sucessfully',
-            EC: 0
-        }
 
+            return {
+                EM: 'Flight plan created sucessfully',
+                EC: 0
+            }
+        }
     } catch (error) {
         console.log(error)
         return {
@@ -957,7 +1012,6 @@ const downloadPlan = async (reqData) => {
                     ship: reqData.ship,
                     station: reqData.station
                 },
-                // attributes: ["rev", "planData", "powerData", "WOData", "shipLeader", "handoverShip", "driver", "BDuty", "powerSource"],
             });
 
             if (data) {
@@ -1032,7 +1086,8 @@ const downloadPlan = async (reqData) => {
                         STT: individualData[0],
                         name: individualData[1],
                         func: individualData[2],
-                        hours: individualData[3]
+                        type: individualData[3],
+                        hours: individualData[4]
                     };
                 })
                 //handle powerSource data
@@ -1156,6 +1211,7 @@ const savePlan = async (reqData) => {
                 array.push(individualData.STT);
                 array.push(individualData.name);
                 array.push(individualData.func);
+                array.push(individualData.type);
                 array.push(individualData.hours);
                 reqData.BDuty[index] = array;
             })
@@ -1404,7 +1460,7 @@ const handleSearchPC = async (searchValue) => {
                 ]
             },
         })
-        if (pointCode) {
+        if (pointCode && pointCode.length > 0) {
             return {
                 EM: 'search point code sucessfully',
                 EC: 0,
@@ -1531,8 +1587,144 @@ const getPowerData = async (date) => {
     }
 }
 
+const savePhase = async (phase) => {
+    try {
+        //handle phaseData
+        phase.phaseData.map((individualData, index) => {
+            let array = [];
+            array.push(individualData.job);
+            array.push(individualData.name);
+            array.push(individualData.ID);
+            array.push(individualData.auth);
+            array.push(individualData.dep);
+            array.push(individualData.other);
+            array.push(individualData.remark);
+            phase.phaseData[index] = array;
+        })
+        let phaseData = nestingArrayToString(phase.phaseData);
+
+        //handle powerSource
+        phase.powerSource.map((individualData, index) => {
+            let array = [];
+            array.push(individualData.STT);
+            array.push(individualData.ID);
+            array.push(individualData.name);
+            array.push(individualData.work);
+            array.push(individualData.WPoint);
+            array.push(individualData.WHour);
+            array.push(individualData.hours);
+            array.push(individualData.type);
+            array.push(individualData.fromTo);
+            phase.powerSource[index] = array;
+        })
+        let powerSource = nestingArrayToString(phase.powerSource);
+
+        let serverData = await db.Flight_Plan.findOne({
+            where: {
+                datePlan: phase.phaseDate,
+                ship: "EA",
+            },
+        });
+        if (!serverData) {
+            // create new flight plan
+            await db.Flight_Plan.create({
+                datePlan: phase.phaseDate,
+                rev: phase.rev,
+                ship: "EA",
+                planData: phaseData,
+                WOData: phase.title,
+                powerSource: powerSource
+            })
+            return {
+                EM: 'Phase check created',
+                EC: 0,
+            }
+        } else {
+
+            await db.Flight_Plan.update(
+                {
+                    rev: phase.rev,
+                    ship: "EA",
+                    planData: phaseData,
+                    WOData: phase.title,
+                    powerSource: powerSource
+                },
+                {
+                    where: {
+                        datePlan: phase.phaseDate,
+                        ship: "EA",
+                    }
+                });
+            return {
+                EM: 'Save phase check sucessful',
+                EC: 0,
+                DT: [],
+            }
+        }
+    } catch (error) {
+        console.log(error)
+        return {
+            EM: 'something wrong with service',
+            EC: 1,
+            DT: [],
+        }
+    }
+}
+
+const loadPhase = async (date) => {
+    try {
+        let serverData = await db.Flight_Plan.findOne({
+            where: {
+                datePlan: date,
+                ship: "EA",
+            },
+            attributes: ["datePlan", "rev", "planData", "WOData"],
+        });
+
+        if (serverData) {
+            let resData = {
+                phaseDate: serverData.datePlan,
+                rev: serverData.rev,
+                phaseData: [],
+                title: serverData.WOData,
+            }
+            let phaseServerData = stringToNestingArray(serverData.planData);
+            //Handle phase data
+            phaseServerData.map((individualData, index) => {
+                resData.phaseData[index] = {
+                    job: individualData[0],
+                    name: individualData[1],
+                    ID: individualData[2],
+                    auth: individualData[3],
+                    dep: individualData[4],
+                    other: individualData[5],
+                    remark: individualData[6],
+                };
+            })
+            return {
+                EM: 'Load phase check sucessfully',
+                EC: 0,
+                DT: resData
+            }
+        } else {
+            return {
+                EM: 'Phase check not found',
+                EC: 2,
+                DT: ''
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            EM: 'something wrong in service',
+            EC: -2
+        }
+    }
+}
+
 module.exports = {
     registerNewUser, handleUserLogin, getAllUser, updateUserInfo, deleteUserInfo, resetPasswordInfo, getUserWithPagination,
     changePasswordInfo, handleSearchUser, uploadPlan, downloadPlan, savePlan, downloadTeam, createNewPointCode,
-    getPointCodeWithPagination, updatePCInfo, deletePCInfo, handleSearchPC, getAllPC, getGroupUsers, getPowerData
+    getPointCodeWithPagination, updatePCInfo, deletePCInfo, handleSearchPC, getAllPC, getGroupUsers, getPowerData, savePhase,
+    loadPhase
 }
