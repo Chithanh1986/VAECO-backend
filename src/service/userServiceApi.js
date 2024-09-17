@@ -837,7 +837,7 @@ const uploadPlan = async (flightPlan) => {
             let WOData = "1|||||||||<>2|||||||||"; //nesting array
             let shipLeader = "||<>||"; //nesting array
             let handoverShip = "|||";
-            let driver = "||<>||<>||stby"; //nesting array
+            let driver = "|||<>|||<>||stby|"; //nesting array
             let BDuty = "1||||<>2||||<>3||||<>4||||<>5||||"; //nesting array
             let powerSource = "1|||0|0|0||||<>2|||0|0|0||||<>3|||0|0|0||||<>4|||0|0|0||||<>5|||0|0|0||||<>6|||0|0|0||||<>7|||0|0|0||||<>8|||0|0|0||||<>9|||0|0|0||||<>10|||0|0|0||||"; //nesting array
 
@@ -1076,7 +1076,8 @@ const downloadPlan = async (reqData) => {
                     driver[index] = {
                         driver: individualData[0],
                         hours: individualData[1],
-                        fromTo: individualData[2]
+                        fromTo: individualData[2],
+                        type: individualData[3],
                     };
                 })
                 //handle BDyty data
@@ -1204,6 +1205,7 @@ const savePlan = async (reqData) => {
                 array.push(individualData.remark);
                 reqData.powerSource[index] = array;
             })
+
             let powerSource = nestingArrayToString(reqData.powerSource);
             //handle BDuty to string
             reqData.BDuty.map((individualData, index) => {
@@ -1222,6 +1224,7 @@ const savePlan = async (reqData) => {
                 array.push(individualData.driver);
                 array.push(individualData.hours);
                 array.push(individualData.fromTo);
+                array.push(individualData.type);
                 reqData.driver[index] = array;
             })
             let driver = nestingArrayToString(reqData.driver);
